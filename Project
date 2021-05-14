@@ -1,0 +1,381 @@
+import pygame
+import sys
+import random
+
+
+#SINARTISH GIA TO BOSS.H SIGKEKRIMENH ELENXEI COORDS GIA TO BOSS WSTE NA TO PERIORISOUME STHN OTHONH MAS KAI NA MHN EINAI DIASPARTO XWRIS KAPOIO LOGO.
+
+def outOfScreen1(x):
+    return x <= 100 or x > 512
+
+
+def outOfScreen(y):
+    return y <= 100 or y > 900
+
+#SINARTISH GIA TO KINOUMENO PATWMA.TO PATWMA SXEDON SE OLA TA SHMEIA DEN STAMATAEI NA EXEI TO DIKO TOU ANIMATION.PROKEITAI GIA MIA PSEUDAISTHISH H OPOIA KSEGELAEI TO MATI KAI METAKINEI TO PATWMA MEXRI ENA SHMEIO.OTAN TO PATWMA FTASEI STO SHMEIO POU EXOUME DHLWSEI KSANAPAEI APO THN ARXH KAI H OLH DIADIKASIA BRISKETE SE MIA LOOPA WSTE NA APOTIPWSEI ANIMATION
+
+def kinoumeno_patwma():
+    screen.blit(floor_surface,(floor_position,900))
+    screen.blit(floor_surface,(floor_position+576,900))
+
+#SINARTISH GIA NA DIMIOURGISOUME TOUS SOLINES.EDW EXOUME 2 SOLINES(PANW KAI KATW) POU XRHSIMOPOIOUNTAI KAI DHLWNONTAI ANALOGOS ME TA CORDS POU PREPEI NA EXOUN WSTE NA YPARXEI H ALLHLOUXIA   
+
+def dimiourgia_solina():
+    random_solinas_pos = random.choice(solinas_height)
+    katw_solinas =solinas_surface.get_rect(midtop=(700,random_solinas_pos))
+    panw_solinas = solinas_surface.get_rect(midbottom=(700,random_solinas_pos - 300))
+    return katw_solinas,panw_solinas
+
+#SINARTISH GIA TOUS SOLINES OPOU OUSIASTIKA ALLAZEI TA COORDS POU XREIAZETAI GIA NA PROSPARNAEI O XARAKTHRAS TON KATHE SOLINA
+
+def kinoumenoi_solines(solines): 
+    for solinas in solines:
+        solinas.centerx -= 5 
+    return solines
+
+#SINARTISH GIA THN ZWGRAFIKH TWN SOLINWN.EDW APOTUPWNOUME STHN OTHONH TOUS SOLINES KAI FUSIKA KAI TOUS SOLINES OI OPOIOI PREPEI NA EINAI ANAPODA GIA NA MPOROUN NA ENTAXTHOUN STO GAME
+
+def draw_solines(solines):
+    for solinas in solines:
+        if solinas.bottom >= 1024: 
+            screen.blit(solinas_surface,solinas)
+        else:
+            flip_solinas = pygame.transform.flip(solinas_surface,False,True)
+            screen.blit(flip_solinas,solinas)
+
+#SINARTISH GIA TO COLLISION POU THA EXOUN OI SOLINES.FUSIKA EDW GINETAI O ORMOS KAI H ULOPOIHSH KATA THN OPOIA OTAN O XARAKTHRAS BRISKETAI SE THESH OPOU YPARXEI SOLINAS ENERGOPOIEITAI H SINARTISH KAI STHN SUNEXEIA TO PAIXNIDI EPISTREFEI STO ARXIKO MENU KATHWS O PAIKTHS OUSIASTIKA EXEI XASEI
+
+def check_collision(solines):
+    for solinas in solines:
+        if pouli_jordan_rect.colliderect(solinas):
+            death_sound.play()
+            return False
+
+    if pouli_jordan_rect.top <= -100 or pouli_jordan_rect.bottom >=900:
+        return False
+    return True
+
+#SINARTISH GIA TO ROTATION TOU BIRD.OUSIASTIKA GINETAI TRANSFORM WSTE NA YPARXEI MIA KAMIA KAMPILH STON XARAKTHRA(KALAISTHITO XARAKTHRISTIKO)
+
+def rotate_pouli(pouli):
+    new_pouli = pygame.transform.rotozoom(pouli,-pouli_jordan_movement*3,1)
+    return new_pouli
+
+#SINARTISH GIA TO ANIMATION TOU BIRD MAS.ANALITIKOTERH EKSHGHSH PIO KATW KATA THN ULOPOIHSH.EDW APLA YPARXEI O ORISMOS THS SINARTHISHS KAI H DIADIKASIA POU LAMVANEI PLHROFORIA APO AYTA P EXOUME DHLWSEI
+
+def pouli_animation():
+    new_pouli = pouli_frames[pouli_index]
+    new_pouli_rect = new_pouli.get_rect(center = (100,pouli_jordan_rect.centery))
+    return new_pouli,new_pouli_rect 
+
+#SINARTISH GIA NA EMFANIZOUME TO SCORE MAS (EXOUME TON ORISMO GIA TA ANALOGA XROMATA ,THN DHLWSH COORDINATES GIA TO MAIN_GAME,THN DHLWSH COORDINATES GIA TO GAME_OVER).H DIADIKASIA GINETAI KAI GIA TO SCORE KAI GIA TO HIGH SCORE KAI ME THN BOITHIA TOU SCREEN.BLIT EMFANIZETAI STHN OTHONH STA SHMEIA POU EMEIS EPILEGOUME
+
+def score_display(game_state):
+    if game_state == 'main_game':
+        score_surface = game_font.render(str(int(score)),True,(0,255,0))
+        score_rect = score_surface.get_rect(center= (288,100))
+        screen.blit(score_surface,score_rect)
+    if game_state == 'game_over':
+        score_surface =game_font.render(f'Score: {(int(score))}' ,True ,(0,255,0))
+        score_rect = score_surface.get_rect(center=(288,100))
+        screen.blit(score_surface,score_rect)
+
+        high_score_surface =game_font.render(f'High Score: {(int(high_score))}',True,(0,255,0))
+        high_score_rect = score_surface.get_rect(center=(288,850))
+        screen.blit(high_score_surface,high_score_rect)
+
+#SINARTHISH GIA NA KANOUME UPDATE TO SCORE MAS 
+
+def update_score(score,high_score):
+    if score > high_score:
+        high_score = score
+    return high_score
+
+
+
+#ARXIKA SETTINGS.KURIWS PERIEXOUN THN ARXH (P.X DIASTASEIS EIKONAS OPWS KAI TO CLOCK KAI FUSIKA THN GRAMATOSEIRA TOU ORIGINAL FLAPPY BIRD)
+
+pygame.init()  
+screen = pygame.display.set_mode((576,1024))
+clock = pygame.time.Clock()
+game_font = pygame.font.Font('04B_19.ttf',40)
+
+
+
+#GAME_STUFF(GRAVITY,ARXIKA MOVEMENT APO TO BIRD,DHLWSH SCORE KAI HIGH SCORE, COOLDOWN GIA THN SFAIRA KAI TO REMAINING COOLDOWN POU SXETIZETAI AMESA ME TO DEFAULT KATHWS EINAI AUTO POU ALLAZEI TO COOLDOWN KATA THN DIARKEIA TOU GAME)
+
+grav=0.25
+pouli_jordan_movement=0
+game_active = False
+score = 0
+high_score = 0
+
+
+
+background_surface = pygame.image.load('assets/mera.png')
+background_surface = pygame.transform.scale2x(background_surface)
+
+floor_surface = pygame.image.load('assets/base.png')
+floor_surface = pygame.transform.scale2x(floor_surface)
+floor_position = 0
+
+#EDW ORIZOUME TO BIRD MAS.FTIAXNOUME ME MIA PSEUDAISTHISH TO ANIMATION TO OPOIO PREPEI NA YPARXEI GIA THN KALITEURESUH TOU PAIXNIDIOU.OUSIASTIKA ME THN XRHSH 3WN EIKONWN EXOUME ANA FRAME THN ALAGH ANALOGA ME TO DIRECRTION TOU XARAKTHRA WSTE KATA THN DIARKEIA TOU RUN NA EXOUME TO EPITHIMITO APOTELESMA
+
+pouli_katwflap = pygame.transform.scale2x(pygame.image.load('assets/kwstasdown.png').convert_alpha())
+pouli_midflap = pygame.transform.scale2x(pygame.image.load('assets/kwstasmid.png').convert_alpha())
+pouli_upflap = pygame.transform.scale2x(pygame.image.load('assets/kwstasup.png').convert_alpha())
+pouli_frames = [pouli_katwflap,pouli_midflap,pouli_upflap]
+pouli_index = 0
+pouli_jordan = pouli_frames[pouli_index]
+pouli_jordan_rect = pouli_jordan.get_rect(center = (100,512))
+
+#DHLWSH TOU BOSS ME THN ANALOGH EIKONA KAI X,Y.FUSIKA MESA SE AUTO YPARXEI KAI TO MOVEMENT POYU THA PREPEI NA YPARXEI WSTE STHN SYNEXEIA ME TON ANALOGO KWDIKA NA METAKINETAI STIS DIASTASEIS POY THELOUME EMEIS 
+
+bosaki=pygame.transform.scale2x(pygame.image.load('assets/boss.png').convert_alpha())
+bosaki_rect=bosaki.get_rect(center = (500,100))
+bosaki_movement= 1
+bosaki_position = 0
+
+#CUSTOMIZE CODING TO BIRDFLAP TO OPOIO THA XRHSIMOPOITHEI STHN SUNEXEIA GIA NA FTIAKSOUME TO BIRD ANIMATION KAI NA FTIAKSOUME KALITERA TON TROPO POU PETAEI O XARAKTHRAS MAS
+
+BIRDFLAP = pygame.USEREVENT + 1
+pygame.time.set_timer(BIRDFLAP,200)
+
+#EPIFANEIA TOU SOLINA (DHLWSH EIKONAS,CONVERTION,KAI DHLWSH SINTETAGMENWN).EPISHS EXOUME KAI THN LISTA H OPOIA STHN DHLWSH EINAI ADEIA KAI STHN SUNEXEIA KANEI SPAWN TOUS SOLINES GIA THN YPARJH PAIXNIDIOU 
+
+solinas_surface = pygame.image.load('assets/kokkinos_solinas.png')
+solinas_surface = pygame.transform.scale2x(solinas_surface)
+solinas_list=[]
+SPAWNSOLINAS = pygame.USEREVENT
+pygame.time.set_timer(SPAWNSOLINAS,1200)
+solinas_height=[400,600,800]
+
+#EPIFANEIA TOU MAIN MENU (DHLWSH EIKONAS,CONVERTION,KAI DHLWSH SINTETAGMENWN)
+
+game_over_surface=pygame.image.load('assets/arxh1.png').convert_alpha()
+game_over_surface=pygame.transform.scale2x(game_over_surface).convert_alpha()
+game_over_rect = game_over_surface.get_rect(center = (288,512))
+
+#SOUNDS 
+flap_sound = pygame.mixer.Sound('sound/agaph.wav')
+death_sound = pygame.mixer.Sound('sound/die.wav')
+score_sound = pygame.mixer.Sound('sound/point.wav') 
+score_sound_countdown = 100
+
+
+sfaira = pygame.transform.scale2x(pygame.image.load('assets/papas1.png').convert_alpha())
+sfaira_rect=sfaira.get_rect(center = (500,100))
+sfaira_movement = 1
+sfaira_movement2 = 3
+
+
+#GAME_LOOP:PERIEXEI THN LOOPA TOU PAIXNIDIOU KAI FUSIKA THN DIADIKASIA EISODOU KAI EKSOUDOU.EPIPLEON EMPERIEXONTAI TA KOUMBIA TOU PAINIDIOU KATHWS KAI H DHMIOURGIA GIA EPILOGH XARAKTHRA STO MAIN MENU TOU PAIXNIDIOU 
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key==pygame.K_SPACE:
+              pouli_jordan_movement=0
+              pouli_jordan_movement-=8
+            elif event.key == pygame.K_1 and game_active==False:
+                    game_active = True
+                    pouli_katwflap = pygame.transform.scale2x(pygame.image.load('assets/giannisdown.png').convert_alpha())
+                    pouli_midflap = pygame.transform.scale2x(pygame.image.load('assets/giannismid.png').convert_alpha())
+                    pouli_upflap = pygame.transform.scale2x(pygame.image.load('assets/giannisup.png').convert_alpha())
+                    pouli_frames = [pouli_katwflap,pouli_midflap,pouli_upflap]
+                    if score==0:
+                        intro_sound= pygame.mixer.Sound('sound/tifash.wav')
+                        intro_sound.play()
+                    death_sound = pygame.mixer.Sound('sound/scream.wav')       
+                    game_active=check_collision(solinas_list)
+
+                
+
+            elif event.key == pygame.K_2 and game_active==False:
+                    game_active = True
+                    pouli_katwflap = pygame.transform.scale2x(pygame.image.load('assets/kwstasdown.png').convert_alpha())
+                    pouli_midflap = pygame.transform.scale2x(pygame.image.load('assets/kwstasmid.png').convert_alpha())
+                    pouli_upflap = pygame.transform.scale2x(pygame.image.load('assets/kwstasup.png').convert_alpha())
+                    pouli_frames = [pouli_katwflap,pouli_midflap,pouli_upflap]
+                    if score==0:
+                        intro_sound= pygame.mixer.Sound('sound/alania.wav')
+                        intro_sound.play()    
+                    death_sound = pygame.mixer.Sound('sound/death1.wav')    
+                    game_active=check_collision(solinas_list) 
+                    
+
+            elif event.key == pygame.K_3 and game_active==False:
+                    game_active = True
+                    pouli_katwflap = pygame.transform.scale2x(pygame.image.load('assets/zetadown.png').convert_alpha())
+                    pouli_midflap = pygame.transform.scale2x(pygame.image.load('assets/zetamid.png').convert_alpha())
+                    pouli_upflap = pygame.transform.scale2x(pygame.image.load('assets/zetaup.png').convert_alpha())
+                    pouli_frames = [pouli_katwflap,pouli_midflap,pouli_upflap]
+                    game_active=check_collision(solinas_list)
+                    
+            elif event.key == pygame.K_4 and game_active==False: 
+                    event.key == pygame.K_4
+                    game_active = True
+                    pouli_katwflap = pygame.transform.scale2x(pygame.image.load('assets/jordandown.png').convert_alpha())
+                    pouli_midflap = pygame.transform.scale2x(pygame.image.load('assets/jordanmid.png').convert_alpha())
+                    pouli_upflap = pygame.transform.scale2x(pygame.image.load('assets/jordanup.png').convert_alpha())
+                    pouli_frames = [pouli_katwflap,pouli_midflap,pouli_upflap]
+                    if score==0:
+                        intro_sound= pygame.mixer.Sound('sound/jordan_intro.wav')
+                        intro_sound.play()    
+                    death_sound = pygame.mixer.Sound('sound/jordan_death.wav')
+                    game_active=check_collision(solinas_list)
+                    
+            #MAIN_MENU TO OPOIO PERIEXEI CLEAR THN LISTA ME TOYS SOLINES KAI TAUTOXRONA EUTHIGRAMIZEI TO BIRD MAS STHN SWSTH THESH KAI BGAZEI TO SCORE KSANA ISO ME TO 0
+            if  (event.key == pygame.K_1 and game_active==False) or (event.key == pygame.K_2 and game_active==False) or (event.key == pygame.K_3 and game_active==False) or (event.key == pygame.K_4 and game_active==False):
+                solinas_list.clear()
+                solinas_list.clear()
+                pouli_jordan_rect.center = (100,512)
+                pouli_jordan_movement=0
+                score = 0
+        #DIADIKASIA KATA THN OPOIA MESOU TOU EVENT ELENXOUME TO SUMMON TOU SOLINA KAI DIMIOURGOUME POLLOUS MAZI SE SEIRA GIA TO PAIXNIDI        
+        if event.type == SPAWNSOLINAS:
+            solinas_list.extend(dimiourgia_solina())
+        #BIRD_FLAP=TO OPOIO TSEKAREI OTI TO POULI PETAEI WSTE NA EKTELESTEI TO ANIMATION POU EXOUME FTIAKSEI STHN SYNARTHSH 
+        if event.type == BIRDFLAP:
+            if pouli_index < 2:
+                pouli_index += 1    
+            else:
+                pouli_index = 0
+
+            pouli_jordan,pouli_jordan_rect = pouli_animation()    
+
+    screen.blit(background_surface,(0,0))
+    #GAME_ACTIVITY
+    if game_active:
+        #Pouli
+        pouli_jordan_movement: float
+        pouli_jordan_movement += grav
+        rotated_pouli = rotate_pouli(pouli_jordan)
+        pouli_jordan_rect.centery += pouli_jordan_movement
+        screen.blit(rotated_pouli,pouli_jordan_rect)
+        game_active=check_collision(solinas_list)
+
+        
+        #Boss
+        
+        if score>10:
+            screen.blit(bosaki,bosaki_rect)
+            bosaki_movement: float
+            bosaki_rect.centery += bosaki_movement
+            if outOfScreen(bosaki_rect.centery)==True:
+                bosaki_movement=bosaki_movement*(-1)    
+            screen.blit(sfaira,sfaira_rect)
+            sfaira_movement: float
+            sfaira_movement2: float
+            sfaira_rect.centery =sfaira_rect.centery + sfaira_movement
+            sfaira_rect.centerx =sfaira_rect.centerx - sfaira_movement2 
+            if outOfScreen(sfaira_rect.centery)==True:
+                sfaira_movement=sfaira_movement*(-1)
+            if bosaki_rect.centery==sfaira_rect.centery:
+                if outOfScreen1(sfaira_rect.centerx)==True:
+                    sfaira_movement2=sfaira_movement2*(-1)
+                if pouli_jordan_rect.colliderect(sfaira_rect):
+                    game_active=False
+                    solinas_list.clear()
+                    solinas_list.clear()
+                    pouli_jordan_rect.center = (100,512)
+                    pouli_jordan_movement=0
+                    score = 0
+
+        if score==0:
+            background_surface = pygame.image.load('assets/mera.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+        if score>20:
+            background_surface = pygame.image.load('assets/nuxta.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+
+        if score>40:
+            background_surface = pygame.image.load('assets/mera.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+
+        if score>46:
+            background_surface = pygame.image.load('assets/nuxta.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+        if score>80:
+            background_surface = pygame.image.load('assets/mera.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+
+        if score>100:
+            background_surface = pygame.image.load('assets/nuxta.png')
+            background_surface = pygame.transform.scale2x(background_surface)    
+
+        if score>110:
+            background_surface = pygame.image.load('assets/mera.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+        if score>140:
+            background_surface = pygame.image.load('assets/nuxta.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+            
+
+
+        #Solines
+        solinas_list = kinoumenoi_solines(solinas_list)
+        draw_solines(solinas_list)
+
+
+        score+=0.01
+        score_display('main_game')
+        score_sound_countdown-= 1
+        if score_sound_countdown<=0:
+            score_sound.play()
+            score_sound_countdown = 100
+    else:
+        bosaki_rect=bosaki.get_rect(center = (500,100))
+        sfaira_rect=sfaira.get_rect(center= (500,100))
+        screen.blit(game_over_surface,game_over_rect)
+        high_score= update_score(score,high_score) 
+        score_display('game_over')    
+
+        if score==0:
+            background_surface = pygame.image.load('assets/mera.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+        if score>20:
+            background_surface = pygame.image.load('assets/nuxta.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+
+
+        if score>40:
+            background_surface = pygame.image.load('assets/mera.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+
+        if score>60:
+            background_surface = pygame.image.load('assets/nuxta.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+        if score>80:
+            background_surface = pygame.image.load('assets/mera.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+
+        if score>100:
+            background_surface = pygame.image.load('assets/nuxta.png')
+            background_surface = pygame.transform.scale2x(background_surface)    
+
+        if score>120:
+            background_surface = pygame.image.load('assets/mera.png')
+            background_surface = pygame.transform.scale2x(background_surface)
+
+    #Patwma
+    floor_position -= 1
+    kinoumeno_patwma()
+    if floor_position <= -576:
+        floor_position = 0
+
+    pygame.display.update()
+    clock.tick(120)

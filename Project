@@ -277,6 +277,7 @@ while True:
                 if outOfScreen1(sfaira_rect.centerx)==True:
                     sfaira_movement2=sfaira_movement2*(-1)
                 if pouli_jordan_rect.colliderect(sfaira_rect):
+                    death_sound.play()
                     game_active=False
                     solinas_list.clear()
                     solinas_list.clear()
